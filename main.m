@@ -19,7 +19,7 @@ St = sum(S, 3); % sum across space
 [Rht, wht] = linreg(St, R);
 
 %% fit
-[RhASD, whASD] = ASD(Ss, R, D);
+[RhASD, whASD] = ASD(Ss, R, D.^2);
 
 %% results
 

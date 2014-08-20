@@ -10,7 +10,8 @@ function [C, dC] = ASD_Regularizer(theta, Ds, mu, cov)
 %         assert(isequal(D, D'), 'D must be symmetric.');
 %         assert(isequal(diag(D), zeros(size(D, 1), 1)), 'D must have a zero diagonal.');
 %     end
-    C = exp(-p - 0.5*(Ds(:,:,1)/ds(1)^2));
+%     C = exp(-p - 0.5*(Ds(:,:,1)/ds(1)^2));
+    C = exp(-p - Ds/ds^2);
 %     assert(all(eig(C) > 0), 'C is not positive definite--check your distance matrices.');
 
     if nargout > 1

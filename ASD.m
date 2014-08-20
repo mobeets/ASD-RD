@@ -1,16 +1,17 @@
 function [Rh wh] = ASD(S, R, D)
     % optimizes log evidence to find hyperparameters
-    t0 = [sqrt(2.4) -log(2) 0.3];
+    t0 = [1.0 1.0 1.0];
     sta = S'*R;
     stim_cov = S'*S;
-    [mu, cov] = posterior_mean_and_cov(stim_cov, sta, D, t0);
+%     [mu, cov] = posterior_mean_and_cov(stim_cov, sta, D, t0);
 
-    objfcn = @(theta) ASD_logEvidence(theta, S, R, mu, cov, D);
-%     objfcn = @(theta) ASD_logEvidence(theta, S, R, stim_cov, sta, D);
-    options = optimoptions(@fminunc, 'GradObj', 'on');
-    theta = fminunc(objfcn, t0, options);
+%     objfcn = @(theta) ASD_logEvidence(theta, S, R, mu, cov, D);
+    objfcn = @(theta) ASD_logEvidence(theta, S, R, stim_cov, sta, D);
+    options = optimoptions(@fmincon, 'GradObj', 'on');
+    % old lb,ub for theta(3) = 1e-5, 1e7
+    theta = fmincon(objfcn, t0, [], [], [], [], [-2 1e-5 1e-5], [20 1e5 2.05], [], options);
 
-%     [mu, cov] = posterior_mean_and_cov(stim_cov, sta, D, theta);
+    [mu, cov] = posterior_mean_and_cov(stim_cov, sta, D, theta);
     Reg = ASD_Regularizer(theta(2:end), D, mu, cov);
     wh = (S'*S + Reg)\(S'*R);
     Rh = S*wh;
@@ -22,9 +23,9 @@ function [mu, cov] = posterior_mean_and_cov(stim_cov, sta, D, theta)
     mu = cov*sta/theta(1);
 end
 
-% function [v, dv] = ASD_logEvidence(theta, X, Y, stim_cov, sta, D)
-function [v, dv] = ASD_logEvidence(theta, X, Y, mu, cov, D)
-%     [mu, cov] = posterior_mean_and_cov(stim_cov, sta, D, theta);
+% function [v, dv] = ASD_logEvidence(theta, X, Y, mu, cov, D)
+function [v, dv] = ASD_logEvidence(theta, X, Y, stim_cov, sta, D)
+    [mu, cov] = posterior_mean_and_cov(stim_cov, sta, D, theta);
     [C, dC] = ASD_Regularizer(theta(2:end), D, mu, cov);
     v = -logE(C, theta(1), cov, X, Y);
     if nargout > 1
@@ -39,7 +40,20 @@ function v = logE(C, sig, cov, X, Y)
     z1 = 2*pi*cov;
     z2 = 2*pi*sig^2*eye(n, n);
     z3 = 2*pi*C;
-    logZ = 0.5*(logDet(z1) - (logDet(z2) + logDet(z3)));
+    try
+        logZ = 0.5*(logDet(z1) - (logDet(z2) + logDet(z3)));
+    catch err
+        disp('-----ERROR-----');
+        if sum(eig(cov) < 0) > 0
+            %   * usually because cov not being regularized enough
+            disp('cov has negative eigenvalues.');
+        end
+        if sum(eig(C) < 0) > 0
+            %   * usually because C is all zeros
+            disp('Regularizer has negative eigenvalues.');
+        end
+        1;
+    end
     B = (1/sig^2) - (X*cov*X')/sig^4;
     v = logZ - 0.5*Y'*B*Y;
 end
