@@ -1,6 +1,6 @@
-function [C, dC] = ASD_Regularizer(theta, Ds, mu, cov)
+function [C, dC] = ASD_Regularizer(theta, Ds, mu, post_cov)
     if nargin < 1
-        [cov, mu, p, ds, Ds] = defaultValues();
+        [post_cov, mu, p, ds, Ds] = defaultValues();
     else
         p = theta(1);
         ds = theta(2:end);
@@ -15,12 +15,12 @@ function [C, dC] = ASD_Regularizer(theta, Ds, mu, cov)
 %     assert(all(eig(C) > 0), 'C is not positive definite--check your distance matrices.');
 
     if nargout > 1
-        dC = gradient(C, mu, cov, Ds, ds);
+        dC = gradient(C, mu, post_cov, Ds, ds);
     end
 end
 
-function dC = gradient(C, mu, cov, Ds, ds)
-    A = (C - cov - mu*mu')/C;
+function dC = gradient(C, mu, post_cov, Ds, ds)
+    A = (C - post_cov - mu*mu')/C;
 %     dC = zeros(1, numel(ds)+1);
 %     dC(:,1) = 0.5*trace(A);
 %     for ii = 1:numel(ds)
@@ -29,11 +29,11 @@ function dC = gradient(C, mu, cov, Ds, ds)
     dC = [0.5*trace(A) -0.5*trace(A*(C .* Ds(:,:,1)/(ds(1)^3))/C)];
 end
 
-function [mu, cov, p, ds, Ds] = defaultValues(nD)
+function [mu, post_cov, p, ds, Ds] = defaultValues(nD)
     ds = ones(nd, 1);
     p = -1;
     n = 99;
-    cov = eye(n, n);
+    post_cov = eye(n, n);
     mu = randn(n, 1);
     successFcn = @(D) all(eig(exp(1 - 0.5*D)) > 0);
     Ds = randomDistances(n, nD, successFcn);

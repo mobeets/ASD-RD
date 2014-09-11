@@ -1,9 +1,9 @@
-function [D, pts, w] = randomDistancesGaussianWeights(pts, mu, cov, nw, b, n)
+function [D, pts, w] = randomDistancesGaussianWeights(pts, mu, Sigma, nw, b, n)
     % returns a square (nw-by-nw) matrix of distances between randomly
     % selected 2d positions, and a vector of weights, where the weight of a
     % point is given by the pdf of a 2d gaussian at that location.
     %
-    % mu and cov parameterize the 2d gaussian
+    % mu and Sigma parameterize the 2d gaussian
     % pts is nw-by-2; if false, pts will be randomly chosen
     % nw is number of weights, if pts is not provided
     % b is bounds
@@ -19,10 +19,10 @@ function [D, pts, w] = randomDistancesGaussianWeights(pts, mu, cov, nw, b, n)
         pts = randomPoints(nw, b, n);
     end
     
-    defarg('mu', mean(pts));
-    defarg('cov', std(pts)/2.0);
+    defarg('mu', mean(pts) + 1);
+    defarg('Sigma', std(pts)/1.2);
     
-    w = mvnpdf(pts, mu, cov);
+    w = mvnpdf(pts, mu, Sigma);
     D = squareform(pdist(pts, 'euclidean'));
 end
 

@@ -1,17 +1,26 @@
-function [R, D, ws, wt] = resp(S, pts)
+function [R, D, ws, wt] = resp(S, pts, noise_sigma)
+% S is space-time stimulus on each trial
+% pts is x,y locations of space as represented in stimulus
+% noise_sigma is variance of noise in response
+%
+% returns the space-time separable weighted response to the given stimulus
+
     [n, nt, ns] = size(S);
-    [D, ~, ws] = randomDistancesGaussianWeights(pts);
+    if nargin < 3
+        noise_sigma = 1;
+    end
     
-    % history filter
+    % time weights
     x = 1:nt;
     wt_fcn = @(k, th) (x(:).^(k-1)).*exp(-x(:)/th);
     wt = wt_fcn(5, 1);
+    
+    % space weights
+    [D, ~, ws] = randomDistancesGaussianWeights(pts);
+    ws = ws*(sum(wt)/sum(ws)); % scale so space and time roughly equal
 
-    sigma = 1;
-    R = zeros(n, 1);
+    R = noise_sigma*randn(n, 1);
     for ii = 1:n
-        R(ii) = wt'*squeeze(S(ii,:,:))*ws;
+        R(ii) = R(ii) + wt'*squeeze(S(ii,:,:))*ws;
     end
-    R = R + sigma*randn(n, 1);
-
 end
