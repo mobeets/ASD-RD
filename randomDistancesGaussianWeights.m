@@ -19,8 +19,9 @@ function [D, pts, w] = randomDistancesGaussianWeights(pts, mu, Sigma, nw, b, n)
         pts = randomPoints(nw, b, n);
     end
     
-    defarg('mu', mean(pts) + 1);
-    defarg('Sigma', std(pts)/1.2);
+    defarg('mu', mean(pts)+1);
+    defarg('Sigma', std(pts)/3);
+    [mu; Sigma]
     
     w = mvnpdf(pts, mu, Sigma);
     D = squareform(pdist(pts, 'euclidean'));

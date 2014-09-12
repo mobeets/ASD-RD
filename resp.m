@@ -7,7 +7,7 @@ function [R, D, ws, wt] = resp(S, pts, noise_sigma)
 
     [n, nt, ns] = size(S);
     if nargin < 3
-        noise_sigma = 1;
+        noise_sigma = 5;
     end
     
     % time weights
@@ -17,10 +17,11 @@ function [R, D, ws, wt] = resp(S, pts, noise_sigma)
     
     % space weights
     [D, ~, ws] = randomDistancesGaussianWeights(pts);
-    ws = ws*(sum(wt)/sum(ws)); % scale so space and time roughly equal
+    ws = 5*ws;%*(sum(wt)/sum(ws)); % scale so space and time roughly equal
 
     R = noise_sigma*randn(n, 1);
     for ii = 1:n
-        R(ii) = R(ii) + wt'*squeeze(S(ii,:,:))*ws;
+        R(ii) = R(ii) + sum(squeeze(S(ii,:,:)))*ws;
+%         R(ii) = R(ii) + wt'*squeeze(S(ii,:,:))*ws;
     end
 end

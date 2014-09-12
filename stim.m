@@ -1,8 +1,13 @@
 function S = stim(n, nt, ns)
     mags = [2, 5, 8];
+    
     pulses = [-fliplr(mags) 0 mags];
     inds = randi(numel(pulses), n, nt, 1);
     St = pulses(inds);
+    
+    maxPulse = 8;
+    St = randi(maxPulse*2+1, n, nt, 1) - maxPulse;
+    
     S = zeros(n, nt, ns);
     for ii = 1:numel(St)
         aa = fix((ii-1)/nt)+1;
